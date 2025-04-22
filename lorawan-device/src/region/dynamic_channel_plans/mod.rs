@@ -208,7 +208,7 @@ impl<
     fn get_rx_datarate(&self, tx_datarate: DR, _frame: &Frame, window: &Window) -> Datarate {
         let datarate = match window {
             Window::_1 => tx_datarate as usize + self.rx1_offset,
-            Window::_2 => self.rx2_dr,
+            Window::_2 => 5,
         };
         R::datarates()[datarate].clone().unwrap()
     }
