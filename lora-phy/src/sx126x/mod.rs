@@ -1,6 +1,6 @@
 mod radio_kind_params;
 
-use defmt::debug;
+use defmt::{debug, warn};
 use embedded_hal_async::delay::DelayNs;
 use embedded_hal_async::spi::*;
 pub use radio_kind_params::TcxoCtrlVoltage;
@@ -886,10 +886,10 @@ where
             }
             RadioMode::Receive(rx_mode) => {
                 if (irq_flags & IrqMask::HeaderError.value()) == IrqMask::HeaderError.value() {
-                    debug!("HeaderError in radio mode {}", radio_mode);
+                    warn!("HeaderError in radio mode {}", radio_mode);
                 }
                 if (irq_flags & IrqMask::CRCError.value()) == IrqMask::CRCError.value() {
-                    debug!("CRCError in radio mode {}", radio_mode);
+                    warn!("CRCError in radio mode {}", radio_mode);
                 }
                 if (irq_flags & IrqMask::RxDone.value()) == IrqMask::RxDone.value() {
                     debug!("RxDone in radio mode {}", radio_mode);
@@ -924,6 +924,15 @@ where
                         ];
                         self.intf.write(&register_and_evt_clear, false).await?;
                     }
+
+                    if (irq_flags & IrqMask::HeaderError.value()) == IrqMask::HeaderError.value() {
+                        return Ok(None);
+                    }
+
+                    if (irq_flags & IrqMask::CRCError.value()) == IrqMask::CRCError.value() {
+                        return Ok(None);
+                    }
+
                     return Ok(Some(IrqState::Done));
                 }
                 if IrqMask::PreambleDetected.is_set_in(irq_flags) || IrqMask::HeaderValid.is_set_in(irq_flags) {
